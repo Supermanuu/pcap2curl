@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
-from scapy.all import PcapReader, re, Raw, TCP
+from scapy.all import PcapReader, re, Raw, TCP, UDP
 
 
 VALID_METHODS = [
@@ -18,7 +18,12 @@ VALID_METHODS = [
 
 
 def payload2curl(p):
-    lines = re.compile("[\n\r]+").split(p.decode())
+    try:
+        lines = re.compile("[\n\r]+").split(p.decode())
+    except UnicodeDecodeError:
+        print(f"This packet cant be decoded because uses non printable ASCII characters: {str(p)}")
+        return False
+
     start_line = re.search("^([A-Z]+) ([^ ]+) (HTTP\/[0-9\/]+)", lines[0])
     method = start_line.group(1)
     url = start_line.group(2)
@@ -53,11 +58,12 @@ def main():
 
     with PcapReader(infile) as packets:
         for p in packets:
-            if p.haslayer(TCP) and p.haslayer(Raw) and p[TCP].dport == 80:
-                payload = p[Raw].load
-                cmd = payload2curl(payload)
+            if (p.haslayer(TCP) or p.haslayer(UDP)) and p.haslayer(Raw):
+                cmd = payload2curl(p[Raw].load)
                 if cmd:
                     print(cmd)
+                else:
+                    print("Bad packet:\n\t" + p.show(dump=True).replace('\n', '\n\t'))
 
 
 if __name__ == "__main__":
