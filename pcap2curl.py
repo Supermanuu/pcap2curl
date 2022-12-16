@@ -46,7 +46,7 @@ def payload2curl(p):
 
 def main():
     if len(sys.argv) != 2:
-        print ("I need an input file. Usage ./pcap2curl.py inputfilename")
+        print (f"Usage: {sys.argv[0]} inputfilename")
         return
 
     infile = sys.argv[1]
