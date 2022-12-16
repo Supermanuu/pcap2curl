@@ -1,5 +1,5 @@
 #!/bin/bash
-set -ex
+set -e
 
 [ -z "$1" ] && echo "Usage: $(basename $0) file" && exit 2
 
